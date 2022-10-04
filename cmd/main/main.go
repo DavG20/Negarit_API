@@ -48,7 +48,7 @@ func creatUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal("error creating user")
 	}
-	users, err := userRepo.RegisterUser(user)
+	users, err := userRepo.UserRegister(user)
 	if err != nil {
 		log.Fatal("error returning", err)
 	}
@@ -88,7 +88,7 @@ func testCookie(w http.ResponseWriter, r *http.Request) {
 	// 	Email: userInput.Email,
 	// }
 
-	cookie, err := cookieHandler.GetSession(session)
+	cookie, err := cookieHandler.GetCookie(session)
 	if err != nil {
 		w.Write([]byte("error geting session"))
 	}
@@ -99,6 +99,24 @@ func testCookie(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("sample output"))
 
 }
+
+func testCookieValidate(w http.ResponseWriter, r *http.Request) {
+	cookiehandler := session.CookieHandler{}
+	fmt.Println(cookiehandler.ValidateCookie(r))
+
+}
+func logout(w http.ResponseWriter, r *http.Request) {
+	cookieHandler := session.CookieHandler{}
+	cookie, err := cookieHandler.RemoverCookie()
+	if err != nil {
+		http.SetCookie(w, nil)
+		fmt.Println("error")
+		w.Write([]byte("unauthorized user"))
+	}
+
+	http.SetCookie(w, cookie)
+	w.Write([]byte("successfuly logout"))
+}
 func main() {
 	if db == nil {
 		fmt.Println("envalid db")
@@ -107,6 +125,8 @@ func main() {
 	defer db.Client().Disconnect(context.TODO())
 
 	http.HandleFunc("/", testCookie)
+	http.HandleFunc("/test", testCookieValidate)
+	http.HandleFunc("/logout", logout)
 	fmt.Println("surving...")
 	http.ListenAndServe(":8080", nil)
 
