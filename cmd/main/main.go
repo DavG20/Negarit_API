@@ -11,7 +11,11 @@ import (
 
 	user "github.com/DavG20/Negarit_API/internal/pkg/User"
 	DB "github.com/DavG20/Negarit_API/internal/pkg/db"
+	"github.com/DavG20/Negarit_API/internal/pkg/entity"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	session "github.com/DavG20/Negarit_API/internal/pkg/Session"
 )
 
 var db *mongo.Database
@@ -52,16 +56,57 @@ func creatUser(w http.ResponseWriter, r *http.Request) {
 	w.Write(usr)
 	fmt.Println(users)
 }
+
+func getUser(response http.ResponseWriter, r *http.Request) {
+	var userRepo user.UserRepo = user.UserRepo{DB: db}
+	var user user.User
+	filter := bson.D{{"email", "dawit@gmail.com"}}
+
+	err := userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		response.Write([]byte("error while decoding or no user found"))
+	}
+	http.SetCookie(response, &http.Cookie{Name: "dav", Value: "davfuck u"})
+	usr, err := json.MarshalIndent(user, "", "\t")
+	if err != nil {
+		response.Write([]byte("error while marshal indent"))
+	}
+	response.Write(usr)
+
+}
+
+func testCookie(w http.ResponseWriter, r *http.Request) {
+	var cookieHandler session.CookieHandler = session.CookieHandler{}
+	// var userInput user.SignInInput
+	var session *session.Session
+	// err := json.NewDecoder(r.Body).Decode(&userInput)
+	// if err != nil {
+	// 	w.Write([]byte("error while decoding"))
+	// }
+
+	// session := &session.Session{
+	// 	Email: userInput.Email,
+	// }
+
+	cookie, err := cookieHandler.GetSession(session)
+	if err != nil {
+		w.Write([]byte("error geting session"))
+	}
+	// fmt.Println(session.Email)
+	http.SetCookie(w, &cookie)
+	// usr, err := json.MarshalIndent(userInput, "", "\t")
+	w.Header().Set("token", cookie.Value)
+	w.Write([]byte("sample output"))
+
+}
 func main() {
 	if db == nil {
 		fmt.Println("envalid db")
 	}
 
-	// user,err:=userRepo.RegisterUser()
-
 	defer db.Client().Disconnect(context.TODO())
 
-	http.HandleFunc("/", creatUser)
+	http.HandleFunc("/", testCookie)
 	fmt.Println("surving...")
 	http.ListenAndServe(":8080", nil)
 
