@@ -2,16 +2,19 @@ package user
 
 import (
 	"context"
-	"errors"
-	"fmt"
-
-	"time"
+	"log"
 
 	"github.com/DavG20/Negarit_API/internal/pkg/entity"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
+type UserRepoInterface interface {
+	CheckUserEmail(email string) (*User, error)
+	UserRegister(userInput SignUpInput) (*User, error)
+	GetUserByEmail(email string) *User
+	UserLogin(email, password string) *User
+}
 
 type UserRepo struct {
 	DB *mongo.Database
@@ -23,44 +26,44 @@ func newUserRepo(db *mongo.Database) *UserRepo {
 	}
 
 }
-
-func (userRepo *UserRepo) RegisterUser(inputuser *SignUpInput) (user *User, errs error) {
-	user = &User{
-		Username:    inputuser.Username,
-		Email:       inputuser.Email,
-		Password:    inputuser.Password,
-		Userprofile: inputuser.Userprofile,
-		Bio:         inputuser.Bio,
-		CreatedAt:   time.Now(),
-	}
-	if userRepo.CheckUserEmailExist(inputuser.Email) {
-		return nil, errors.New("email already registerd")
-	}
-	res, err := userRepo.DB.Collection(entity.User).InsertOne(context.TODO(), user)
+func (userRepo *UserRepo) CheckUserEmail(email string) (user *User, err error) {
+	filter := bson.D{{Key: "email", Value: email}}
+	err = userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(user)
 	if err != nil {
-		fmt.Println("error inserting ")
 		return nil, err
 	}
-
-	userId := entity.GetIdFromInsertedObjectId(res.InsertedID.(primitive.ObjectID))
-	fmt.Println(userId, "this is userid")
-	filter := bson.D{{"_id", user.Email}}
-	update := bson.D{{"$set", bson.D{{"_id", userId}}}}
-	// var u User
-	resupd, err := userRepo.DB.Collection(entity.User).UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		fmt.Println("error updating userid")
-	}
-	fmt.Println("get user", user, "and ", resupd)
 	return user, nil
 }
 
-func (userRepo *UserRepo) CheckUserEmailExist(email string) bool {
-	filter := bson.D{{"email", email}}
-	var user User
-	err := userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(&user)
+func (userRepo *UserRepo) UserRegister(userInput *SignUpInput) (user *User, err error) {
+	//    i have to fix this
+	_, err = userRepo.DB.Collection(entity.User).InsertOne(context.TODO(), userInput)
 	if err != nil {
-		return false
+		return user, err
 	}
-	return true
+	return user, nil
+
+}
+
+func (userRepo *UserRepo) GetUserByEmail(email string) (user *User) {
+	user, err := userRepo.CheckUserEmail(email)
+	if err != nil {
+		log.Panicln("error user not found")
+		return nil
+	}
+	return user
+}
+
+func (userRepo *UserRepo) UserLogin(email, password string) (user *User) {
+	pass, err := entity.PasswordHash(password)
+	if err != nil {
+		log.Panicln("error while password hash")
+	}
+	filter := bson.D{{Key: "email", Value: email}, {Key: "password", Value: pass}}
+	err = userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(user)
+	if err != nil {
+		log.Panicln("error finding loging")
+		return nil
+	}
+	return user
 }
