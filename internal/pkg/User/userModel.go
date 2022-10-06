@@ -20,7 +20,7 @@ type SignUpInput struct {
 	Bio         string `json:"bio,omitempty"`
 }
 
-type SignInInput struct {
+type SignInInput struct {   //auth input
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }

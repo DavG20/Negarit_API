@@ -12,7 +12,7 @@ import (
 
 type Session struct {
 	jwt.StandardClaims
-	Email string
+	UserName string
 }
 
 type CookieHandler struct{}

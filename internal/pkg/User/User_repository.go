@@ -10,10 +10,11 @@ import (
 )
 
 type UserRepoInterface interface {
-	CheckUserEmail(email string) (*User, error)
-	UserRegister(userInput SignUpInput) (*User, error)
-	GetUserByEmail(email string) *User
-	UserLogin(email, password string) *User
+	CheckUserEmailExist(email string) (*DBResponse, error)
+	CheckUserNameExist(username string) (*DBResponse, error)
+	UserRegister(userInput *SignUpInput) (*DBResponse, error)
+	GetUserByEmail(email string) *DBResponse
+	UserLogin(userInput *SignInInput) *DBResponse
 }
 
 type UserRepo struct {
@@ -26,7 +27,7 @@ func newUserRepo(db *mongo.Database) *UserRepo {
 	}
 
 }
-func (userRepo *UserRepo) CheckUserEmail(email string) (user *User, err error) {
+func (userRepo *UserRepo) CheckUserEmailExist(email string) (user *DBResponse, err error) {
 	filter := bson.D{{Key: "email", Value: email}}
 	err = userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(user)
 	if err != nil {
@@ -35,7 +36,18 @@ func (userRepo *UserRepo) CheckUserEmail(email string) (user *User, err error) {
 	return user, nil
 }
 
-func (userRepo *UserRepo) UserRegister(userInput *SignUpInput) (user *User, err error) {
+func (userRepo *UserRepo) CheckUserNameExist(username string) (user *DBResponse, err error) {
+	filter := bson.D{{Key: "username", Value: username}}
+
+	err = userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+
+}
+
+func (userRepo *UserRepo) UserRegister(userInput *SignUpInput) (user *DBResponse, err error) {
 	//    i have to fix this
 	_, err = userRepo.DB.Collection(entity.User).InsertOne(context.TODO(), userInput)
 	if err != nil {
@@ -45,8 +57,8 @@ func (userRepo *UserRepo) UserRegister(userInput *SignUpInput) (user *User, err 
 
 }
 
-func (userRepo *UserRepo) GetUserByEmail(email string) (user *User) {
-	user, err := userRepo.CheckUserEmail(email)
+func (userRepo *UserRepo) GetUserByEmail(email string) (user *DBResponse) {
+	user, err := userRepo.CheckUserEmailExist(email)
 	if err != nil {
 		log.Panicln("error user not found")
 		return nil
@@ -54,12 +66,12 @@ func (userRepo *UserRepo) GetUserByEmail(email string) (user *User) {
 	return user
 }
 
-func (userRepo *UserRepo) UserLogin(email, password string) (user *User) {
-	pass, err := entity.PasswordHash(password)
+func (userRepo *UserRepo) UserLogin(userInput *SignInInput) (user *DBResponse) {
+	pass, err := entity.PasswordHash(userInput.Password)
 	if err != nil {
 		log.Panicln("error while password hash")
 	}
-	filter := bson.D{{Key: "email", Value: email}, {Key: "password", Value: pass}}
+	filter := bson.D{{Key: "email", Value: userInput.Email}, {Key: "password", Value: pass}}
 	err = userRepo.DB.Collection(entity.User).FindOne(context.TODO(), filter).Decode(user)
 	if err != nil {
 		log.Panicln("error finding loging")
