@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"encoding/json"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,4 +29,13 @@ func GetIdFromInsertedObjectId(userId primitive.ObjectID) string {
 	newUserId := strings.TrimSuffix(strings.TrimPrefix(userId.String(), "ObjectID(\""), "\")")
 
 	return newUserId
+}
+
+func MarshalIndentHelper(s interface{}) []byte {
+
+	byteInput, err := json.MarshalIndent(s, "", "\t")
+	if err != nil {
+		return nil
+	}
+	return byteInput
 }

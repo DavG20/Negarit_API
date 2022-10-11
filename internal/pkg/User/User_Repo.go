@@ -5,9 +5,10 @@ import (
 )
 
 type UserRepoInterface interface {
-	CheckUserEmailExist(email string) (*usermodel.DBResponse, error)
-	CheckUserNameExist(username string) (*usermodel.DBResponse, error)
+	CheckUserEmailExist(email string) (*usermodel.User, error)
+	CheckUserNameExist(username string) (*usermodel.User, error)
 	UserRegister(userInput *usermodel.SignUpInput) (*usermodel.DBResponse, error)
-	GetUserByEmail(email string) *usermodel.DBResponse
-	UserLogin(userInput *usermodel.SignInInput) *usermodel.DBResponse
+	GetUserByEmail(email string) *usermodel.User
+	CheckUserLogin(userInput *usermodel.SignInInput) *usermodel.DBResponse
+	GetSecuredUser(user *usermodel.User) *usermodel.DBResponse
 }

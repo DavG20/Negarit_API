@@ -5,13 +5,12 @@ import (
 	userModel "github.com/DavG20/Negarit_API/internal/pkg/User/User_Model"
 )
 
-
 type UserService struct {
 	UserRepoI user.UserRepoInterface
 }
 
-func NewUserService(repo user.UserRepoInterface) *UserService {
-	return &UserService{UserRepoI: repo}
+func NewUserService(repo user.UserRepoInterface) UserService {
+	return UserService{UserRepoI: repo}
 }
 
 func (userService *UserService) CheckUserEmailExist(email string) bool {
@@ -39,6 +38,17 @@ func (userService *UserService) UserRegister(userInput *userModel.SignUpInput) *
 	return user
 }
 
-func (userService UserService) UserLogin(userInput *userModel.SignInInput) *userModel.DBResponse {
-	return userService.UserRepoI.UserLogin(userInput)
+func (userService *UserService) GetUserByEmail(email string) *userModel.User {
+	return userService.UserRepoI.GetUserByEmail(email)
+}
+func (userService UserService) CheckUserLogin(userInput *userModel.SignInInput) bool {
+	res := userService.UserRepoI.CheckUserLogin(userInput)
+	if res == nil {
+		return false
+	}
+	return true
+}
+
+func (userService *UserService) GetSecuredUser(user *userModel.User) *userModel.DBResponse {
+	return userService.UserRepoI.GetSecuredUser(user)
 }

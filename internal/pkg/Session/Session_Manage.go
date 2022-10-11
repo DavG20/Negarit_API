@@ -22,7 +22,7 @@ func NewCookieHanedler() *CookieHandler {
 }
 
 func (cookieHandler *CookieHandler) GetCookie(session *Session) (cookie http.Cookie, errs error) {
-	expirtionTime := time.Now().Add(24 * time.Hour)
+	expirtionTime := time.Now().Add(2400 * time.Hour)
 
 	session = &Session{
 		StandardClaims: jwt.StandardClaims{
