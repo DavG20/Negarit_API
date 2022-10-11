@@ -9,4 +9,6 @@ type Friends struct {
 	Friend_A_UserName string             `json:"friend_a_username"`
 	Friend_B_UserName string             `json:"friend_b_username"`
 	Message           []*message.Message `json:"message"`
+	Block_By_A        bool               `json:"blockA"`
+	Block_By_B        bool               `json:"blockB"`
 }
