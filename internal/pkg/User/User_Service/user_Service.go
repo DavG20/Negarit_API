@@ -1,6 +1,9 @@
 package userservice
 
 import (
+	"fmt"
+	"mime/multipart"
+
 	user "github.com/DavG20/Negarit_API/internal/pkg/User"
 	userModel "github.com/DavG20/Negarit_API/internal/pkg/User/User_Model"
 )
@@ -41,14 +44,43 @@ func (userService *UserService) UserRegister(userInput *userModel.SignUpInput) *
 func (userService *UserService) GetUserByEmail(email string) *userModel.User {
 	return userService.UserRepoI.GetUserByEmail(email)
 }
-func (userService UserService) CheckUserLogin(userInput *userModel.SignInInput) bool {
-	res := userService.UserRepoI.CheckUserLogin(userInput)
-	if res == nil {
+func (userService *UserService) GetUserByUserName(userName string) *userModel.User {
+	return userService.UserRepoI.GetUserByUserName(userName)
+}
+
+func (userService *UserService) GetSecuredUser(user *userModel.User) *userModel.DBResponse {
+	return userService.UserRepoI.GetSecuredUser(user)
+}
+
+func (userService *UserService) DeleteUserAccount(userName, Password string) bool {
+	err := userService.UserRepoI.DeleteUserAccount(userName, Password)
+	if err != nil {
+		fmt.Println("error in service line 54")
 		return false
 	}
 	return true
 }
 
-func (userService *UserService) GetSecuredUser(user *userModel.User) *userModel.DBResponse {
-	return userService.UserRepoI.GetSecuredUser(user)
+func (userService *UserService) UpdateUserProfile(userName, userProfile, bio string) (*userModel.DBResponse, bool) {
+	user, err := userService.UserRepoI.UpdateUserProfile(userName, userProfile, bio)
+	if err != nil {
+		return nil, false
+	}
+	return user, true
+}
+
+func (userService *UserService) ChangePassword(userName, newPassword string) (*userModel.DBResponse, bool) {
+	user, err := userService.UserRepoI.ChangePassword(userName, newPassword)
+	if err != nil {
+		return nil, false
+	}
+	return user, true
+}
+
+func (userService *UserService) UploadProfile(file multipart.File, fileName string) bool {
+	err := userService.UserRepoI.UploadProfile(file, fileName)
+	if err != nil {
+		return false
+	}
+	return true
 }

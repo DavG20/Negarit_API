@@ -34,7 +34,29 @@ type DBResponse struct {
 	Bio         string    `json:"bio"`
 	CreatedOn   time.Time `json:"createdon"`
 }
-type DBResponseFailed struct{ 
-    Message string `json:"message"`
-	
+type DBResponseFailed struct {
+	Message string `json:"message"`
+}
+
+type UpdateUserProfile struct {
+	Userprofile string `json:"userprofile"`
+	Bio         string `json:"bio"`
+}
+
+// custom struct not to expose credentials
+type UserProfileUpdateResponse struct {
+	Message string       `json:"message"`
+	Success bool         `json:"success"`
+	User    []DBResponse `json:"user"`
+}
+
+type UpdatePassword struct {
+	OldPassword string `json:"password"`
+	NewPassword string `json:"newpassword"`
+}
+
+type UserProfile struct {
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+	UserPro []DBResponse
 }

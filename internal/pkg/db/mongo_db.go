@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DavG20/Negarit_API/internal/pkg/entity"
+	"github.com/DavG20/Negarit_API/pkg/entity"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

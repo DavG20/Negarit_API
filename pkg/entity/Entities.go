@@ -9,3 +9,14 @@ const (
 
 	DBName = "nagarit"
 )
+
+var (
+	ImageExtensions = []string{
+		"jpeg",
+		"png",
+		"jpg",
+		"gif",
+		"btmp",
+	}
+)
+

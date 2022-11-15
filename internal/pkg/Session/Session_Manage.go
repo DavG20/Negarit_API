@@ -24,12 +24,14 @@ func NewCookieHanedler() *CookieHandler {
 func (cookieHandler *CookieHandler) GetCookie(session *Session) (cookie http.Cookie, errs error) {
 	expirtionTime := time.Now().Add(2400 * time.Hour)
 
-	session = &Session{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirtionTime.Unix(),
-		},
-	}
+	// session = &Session{
+	// 	StandardClaims: jwt.StandardClaims{
+	// 		ExpiresAt: expirtionTime.Unix(),
+	// 	},
+	// }
+	ss := jwt.StandardClaims{ExpiresAt: expirtionTime.Unix()}
 
+	session.StandardClaims = ss
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, session)
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWTKEY")))
@@ -45,10 +47,10 @@ func (cookieHandler *CookieHandler) GetCookie(session *Session) (cookie http.Coo
 	return cookie, nil
 }
 
-func (cookieHandler *CookieHandler) ValidateCookie(request *http.Request) bool {
+func (cookieHandler *CookieHandler) ValidateCookie(request *http.Request) (*Session, bool) {
 	tokenCookie, err := request.Cookie("token")
 	if err != nil {
-		return false
+		return nil, false
 	}
 	token := tokenCookie.Value
 	fmt.Println(token, " token")
@@ -62,32 +64,33 @@ func (cookieHandler *CookieHandler) ValidateCookie(request *http.Request) bool {
 	})
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			return false
+			return nil, false
 		}
-		return false
+		return nil, false
 	}
 	if !tkn.Valid {
-		return false
+		return nil, false
 	}
-	return true
+	return session, true
 
 }
 
-func (cookieHandler *CookieHandler) RemoverCookie() (*http.Cookie, error) {
+func (cookieHandler *CookieHandler) RemoveCookie() (http.Cookie, error) {
 	expirationTime := time.Unix(0, 0)
 	session := &Session{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
+		UserName: "",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, session)
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWTKEY")))
 	if err != nil {
 		log.Println("error signing token")
-		return nil, err
+		log.Println("error signing")
 	}
-	cookie := &http.Cookie{
+	cookie := http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
 		Expires:  expirationTime,
@@ -97,3 +100,5 @@ func (cookieHandler *CookieHandler) RemoverCookie() (*http.Cookie, error) {
 	return cookie, nil
 
 }
+
+

@@ -7,7 +7,7 @@ import (
 
 	message "github.com/DavG20/Negarit_API/internal/pkg/Message"
 	user_service "github.com/DavG20/Negarit_API/internal/pkg/User/User_Service"
-	"github.com/DavG20/Negarit_API/internal/pkg/entity"
+	"github.com/DavG20/Negarit_API/pkg/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

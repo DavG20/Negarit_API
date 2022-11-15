@@ -13,7 +13,7 @@ import (
 	userrepo "github.com/DavG20/Negarit_API/internal/pkg/User/User_Repo"
 	userservice "github.com/DavG20/Negarit_API/internal/pkg/User/User_Service"
 	DB "github.com/DavG20/Negarit_API/internal/pkg/db"
-	"github.com/DavG20/Negarit_API/internal/pkg/entity"
+	"github.com/DavG20/Negarit_API/pkg/entity"
 
 	apihandler "github.com/DavG20/Negarit_API/api/API_Handler"
 
@@ -52,14 +52,43 @@ func main() {
 	cookieHandler := session.NewCookieHanedler()
 	userHandler := apihandler.NewUserHandler(*cookieHandler, userservice)
 	fmt.Println(userHandler)
-	
 
 	fmt.Println("surver running ...")
-	http.HandleFunc("/", userHandler.UserLogin)
+	print(entity.GenerateRandomString())
+
+	http.HandleFunc("/user/", userHandler.RegisterUser)
+	http.HandleFunc("/user/login", (userHandler.UserLogin))
+	http.HandleFunc("/user/logout", userHandler.UserLogout)
+	http.HandleFunc("/user/deleteaccount", userHandler.DeleteUserAccount)
+	http.HandleFunc("/user/updateprofile", userHandler.UpdateUserProfile)
+	http.HandleFunc("/user/changepassword", userHandler.ChangePassword)
+	http.HandleFunc("/user/userprofile", userHandler.MyProfile)
+	http.HandleFunc("/user/searchuser", userHandler.SearchUser)
+	http.HandleFunc("/user/uploadprofile", userHandler.UploadProfilePic)
+	
+
 	http.ListenAndServe(":8080", nil)
 
 }
+
+func test(res http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		res.Write([]byte("eror"))
+		return
+	}
+	user := r.FormValue("username")
+	fmt.Println(user)
+	res.Write([]byte(user))
+}
+
 func dispaly(w http.ResponseWriter, r *http.Request) {
+	// session, res := session.NewCookieHanedler().ValidateCookie(r)
+	// if !res {
+	// 	fmt.Println("can't get cookies")
+	// }
+	// fmt.Println(session.UserName, "h")
+
 	filter := bson.D{{}}
 	user := userModel.User{}
 	users := []userModel.User{}
