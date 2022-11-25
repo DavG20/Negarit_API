@@ -60,7 +60,7 @@ func main() {
 
 	fmt.Println("surver running ...")
 	fr, _ := friendsService.GetFriendByUserName("DavG220", "DavG2000")
-	deleted := friendsService.BlockFriend("DavG220", fr)
+	deleted := friendsService.BlockFriend("DavG2000", fr)
 	frr, _ := friendsService.GetFriendByUserName("DavG220", "DavG2000")
 	fmt.Println(deleted, "after block", frr)
 
@@ -75,6 +75,7 @@ func main() {
 	http.HandleFunc("/user/uploadprofile", userHandler.UploadProfilePic)
 	http.HandleFunc("/user/createfriends", friendsHandler.CreateFriendshipHandler)
 	http.HandleFunc("/user/friend/delete", friendsHandler.DeleteFriendsHandler)
+	http.HandleFunc("/user/friend/profile", friendsHandler.ViewFriendsProfile)
 	http.HandleFunc("/", dispaly)
 	http.HandleFunc("/del", delete)
 
