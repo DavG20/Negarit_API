@@ -182,6 +182,7 @@ func (userHandler UserHandler) RegisterUser(response http.ResponseWriter, reques
 	// dbResponse:=userModel.DBResponse{}
 
 	err := json.NewDecoder(request.Body).Decode(&user)
+	fmt.Println(user, "user")
 	if err != nil {
 		log.Println("the input is not valid")
 	}
@@ -489,7 +490,7 @@ func (userHandler *UserHandler) SearchUser(response http.ResponseWriter, request
 	userName := request.FormValue("username")
 	session, isValid := userHandler.CookieHandler.ValidateCookie(request)
 	if !isValid {
-		dbResponse.Message = "Unauthorizezed user"
+		dbResponse.Message = "Unauthorized user"
 		dbResponse.Success = false
 		response.Write(entity.MarshalIndentHelper(dbResponse))
 		return
@@ -503,7 +504,7 @@ func (userHandler *UserHandler) SearchUser(response http.ResponseWriter, request
 	isUserExist := userHandler.UserServ.CheckUserNameExist(session.UserName)
 	// incase the request is not lagal and a session username is modified
 	if !isUserExist {
-		dbResponse.Message = "you are not legal cleint to get this service ,"
+		dbResponse.Message = "you are not a legal client to get this service ,"
 		dbResponse.Success = false
 		response.Write(entity.MarshalIndentHelper(dbResponse))
 		return
@@ -598,13 +599,13 @@ func (userHandler *UserHandler) UploadProfilePic(response http.ResponseWriter, r
 		response.Write(entity.MarshalIndentHelper(dbResponse))
 		return
 	}
-    updateUser,err:=userHandler.UserServ.UserRepoI.UpdateUserProfile(user.Username,ImageName,user.Bio)
-	if err!=nil{
-		dbResponse.Message="Internal error , please try again"
-		dbResponse.Success=false
+	updateUser, err := userHandler.UserServ.UserRepoI.UpdateUserProfile(user.Username, ImageName, user.Bio)
+	if err != nil {
+		dbResponse.Message = "Internal error , please try again"
+		dbResponse.Success = false
 		response.Write(entity.MarshalIndentHelper(dbResponse))
 		return
 	}
-    
+
 	fmt.Println(updateUser)
 }

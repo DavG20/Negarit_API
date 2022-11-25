@@ -5,10 +5,10 @@ import (
 )
 
 type Friends struct {
-	Friend_Id         string             `bson:"_id" json:"id"`
-	Friend_A_UserName string             `json:"friend_a_username"`
-	Friend_B_UserName string             `json:"friend_b_username"`
-	Message           []*message.Message `json:"message"`
-	Block_By_A        bool               `json:"blockA"`
-	Block_By_B        bool               `json:"blockB"`
+	Friend_Id         string            `bson:"_id,omitempty"  json:"id,omitempty"`
+	Friend_A_UserName string            `json:"friend_a_username"`
+	Friend_B_UserName string            `json:"friend_b_username"`
+	Message           []message.Message `json:"message,omitempty"`
+	Block_By_A        bool              `json:"block_a"`
+	Block_By_B        bool              `json:"block_b"`
 }

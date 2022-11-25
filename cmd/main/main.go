@@ -8,10 +8,10 @@ import (
 	"os"
 	"sync"
 
+	friends "github.com/DavG20/Negarit_API/internal/pkg/Friends"
 	session "github.com/DavG20/Negarit_API/internal/pkg/Session"
-	userModel "github.com/DavG20/Negarit_API/internal/pkg/User/User_Model"
 	userrepo "github.com/DavG20/Negarit_API/internal/pkg/User/User_Repo"
-	userservice "github.com/DavG20/Negarit_API/internal/pkg/User/User_Service"
+	user_service "github.com/DavG20/Negarit_API/internal/pkg/User/User_Service"
 	DB "github.com/DavG20/Negarit_API/internal/pkg/db"
 	"github.com/DavG20/Negarit_API/pkg/entity"
 
@@ -24,6 +24,7 @@ import (
 var db *mongo.Database
 
 var once sync.Once
+var friend *friends.Friends
 
 func StartUp() {
 	once.Do(
@@ -48,13 +49,20 @@ func main() {
 	}
 
 	userRepo := userrepo.NewUserRepo(db)
-	userservice := userservice.NewUserService(userRepo)
+	userservice := user_service.NewUserService(userRepo)
 	cookieHandler := session.NewCookieHanedler()
 	userHandler := apihandler.NewUserHandler(*cookieHandler, userservice)
 	fmt.Println(userHandler)
 
+	friendsRepo := friends.NewFriendsRepo(db)
+	friendsService := friends.NewFriendsService(friendsRepo)
+	friendsHandler := apihandler.NewFriendsHandler(*cookieHandler, friendsService, userservice)
+
 	fmt.Println("surver running ...")
-	print(entity.GenerateRandomString())
+	fr, _ := friendsService.GetFriendByUserName("DavG220", "DavG2000")
+	deleted := friendsService.BlockFriend("DavG220", fr)
+	frr, _ := friendsService.GetFriendByUserName("DavG220", "DavG2000")
+	fmt.Println(deleted, "after block", frr)
 
 	http.HandleFunc("/user/", userHandler.RegisterUser)
 	http.HandleFunc("/user/login", (userHandler.UserLogin))
@@ -65,7 +73,10 @@ func main() {
 	http.HandleFunc("/user/userprofile", userHandler.MyProfile)
 	http.HandleFunc("/user/searchuser", userHandler.SearchUser)
 	http.HandleFunc("/user/uploadprofile", userHandler.UploadProfilePic)
-	
+	http.HandleFunc("/user/createfriends", friendsHandler.CreateFriendshipHandler)
+	http.HandleFunc("/user/friend/delete", friendsHandler.DeleteFriendsHandler)
+	http.HandleFunc("/", dispaly)
+	http.HandleFunc("/del", delete)
 
 	http.ListenAndServe(":8080", nil)
 
@@ -83,16 +94,11 @@ func test(res http.ResponseWriter, r *http.Request) {
 }
 
 func dispaly(w http.ResponseWriter, r *http.Request) {
-	// session, res := session.NewCookieHanedler().ValidateCookie(r)
-	// if !res {
-	// 	fmt.Println("can't get cookies")
-	// }
-	// fmt.Println(session.UserName, "h")
 
 	filter := bson.D{{}}
-	user := userModel.User{}
-	users := []userModel.User{}
-	cursor, err := db.Collection(entity.User).Find(context.TODO(), filter)
+	user := friends.Friends{}
+	users := []friends.Friends{}
+	cursor, err := db.Collection(entity.Friends).Find(context.TODO(), filter)
 	if err != nil {
 		fmt.Println("no user found")
 	}
@@ -101,8 +107,20 @@ func dispaly(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error")
 		}
+
 		users = append(users, user)
-		w.Write(entity.MarshalIndentHelper(users))
 
 	}
+	w.Write(entity.MarshalIndentHelper(users))
+}
+
+func delete(res http.ResponseWriter, r *http.Request) {
+	// filter := bson.D{{}}
+	err := db.Collection(entity.Friends).Drop(context.TODO())
+	if err != nil {
+		res.Write([]byte("can't delete "))
+		return
+	}
+	fmt.Println("the number of rows deleted is")
+	res.Write([]byte("success"))
 }
