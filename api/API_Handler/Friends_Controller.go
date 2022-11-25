@@ -79,6 +79,8 @@ func (friendsHandler *FriendsHandler) CreateFriendshipHandler(response http.Resp
 			response.Write(entity.MarshalIndentHelper(dbResponse))
 			return
 		}
+		// the new message id will be the previous message length  , o-indexed
+
 		message.Message_Id = len(friend.Message)
 		friend.Message = append(friend.Message, message)
 
@@ -164,4 +166,62 @@ func (friendsHandler *FriendsHandler) DeleteFriendsHandler(response http.Respons
 	dbResponse.Message = "friend deleted successfuly, "
 	response.WriteHeader(http.StatusOK)
 	response.Write(entity.MarshalIndentHelper(dbResponse))
+}
+
+func (friendsHandler *FriendsHandler) ViewFriendsProfile(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("Content-Type", "application/json")
+	dbResponse := usermodel.DBResponseFailed{}
+	session, isValidRequest := friendsHandler.CookieHandler.ValidateCookie(request)
+	// check if  the user is authorized
+	if !isValidRequest {
+		dbResponse.Message = "unauthorized to get this service , try to login"
+		response.WriteHeader(http.StatusUnauthorized)
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+	}
+	//check if the user is exist
+	isUserExist := friendsHandler.UserService.CheckUserNameExist(session.UserName)
+	if !isUserExist {
+		dbResponse.Message = "user not found , invalid request, try to register first"
+		response.WriteHeader(http.StatusUnauthorized)
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+	}
+	// check is friend is exist
+	friendsUserName := request.FormValue("friendsUserName")
+	isFriendExist := friendsHandler.UserService.CheckUserNameExist(friendsUserName)
+	if !isFriendExist {
+		dbResponse.Message = "user not found by this username"
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+
+	}
+	// check is this dude search for his username
+	if session.UserName == friendsUserName {
+		dbResponse.Message = "u r trying to see ur profile dude :)"
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+	}
+	// if both are legal user , then check is they are friend
+	areTheyFriend := friendsHandler.FriendsService.AreTheyFriend(session.UserName, friendsUserName)
+	if !areTheyFriend {
+		dbResponse.Message = "u r not friend to see profile , private profile"
+		response.WriteHeader(http.StatusUnauthorized)
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+
+	}
+	user := friendsHandler.UserService.GetUserByUserName(friendsUserName)
+	friendsProfile := friendsHandler.UserService.GetSecuredUser(user)
+	if friendsProfile == nil {
+		dbResponse.Message = "internale server error please try again"
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write(entity.MarshalIndentHelper(dbResponse))
+		return
+	}
+
+	response.WriteHeader(http.StatusOK)
+	response.Write(entity.MarshalIndentHelper(friendsProfile))
+
 }

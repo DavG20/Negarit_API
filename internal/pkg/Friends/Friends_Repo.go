@@ -193,27 +193,29 @@ func (friends_Repo *Friends_Repo) DeleteFriends(userName, friendsUserName string
 }
 
 func (friends_Repo *Friends_Repo) BlockFriend(userName string, friends *Friends) bool {
-
-	filter := bson.D{{Key: "$or", Value: bson.A{bson.D{{Key: "friend_a_username", Value: friends.Friend_A_UserName}, {Key: "friends_b_username", Value: friends.Friend_B_UserName}}, bson.D{{Key: "friends_a_username", Value: friends.Friend_B_UserName}, {Key: "friend_b_username", Value: friends.Friend_A_UserName}}}}}
-
-	if friends.Friend_A_UserName == userName {
-		// filter := bson.D{{Key: "friend_a_username", Value: userName}, {Key: "friend_b_username", Value: friendsUserName}}
-		update := bson.D{{Key: "$set", Value: bson.D{{Key: "block_a", Value: !friends.Block_By_A}}}}
-		res, err := friends_Repo.DB.Collection(entity.Friends).UpdateOne(context.TODO(), filter, update)
-		fmt.Println("here", res.ModifiedCount)
+	if friends == nil {
+		fmt.Println("invalid friend")
+		return false
+	}
+	filter := bson.D{{Key: "$or", Value: bson.A{bson.D{{Key: "friend_a_username", Value: friends.Friend_A_UserName}, {Key: "friend_b_username", Value: friends.Friend_B_UserName}}, bson.D{{Key: "friend_a_username", Value: friends.Friend_B_UserName}, {Key: "friend_b_username", Value: friends.Friend_A_UserName}}}}}
+	// fr := &Friends{}
+	if userName == friends.Friend_A_UserName {
+		fmt.Println("in")
+		update := bson.D{{Key: "$set", Value: bson.D{{Key: "blocka", Value: !friends.Block_By_A}}}}
+		_, err := friends_Repo.DB.Collection(entity.Friends).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
-			fmt.Println("idiot u can't filtter by objcet")
+			fmt.Println("error finding friend")
+			return false
+		}
+		return true
+	} else {
+		fmt.Println("in else")
+		update := bson.D{{Key: "$set", Value: bson.D{{Key: "blockb", Value: true}}}}
+		_, err := friends_Repo.DB.Collection(entity.Friends).ReplaceOne(context.TODO(), filter, update)
+		if err != nil {
+			fmt.Println("error finding friend")
 			return false
 		}
 		return true
 	}
-	// filter := bson.D{{Key: "friend_b_username", Value: userName}, {Key: "friend_a_username", Value: friendsUserName}}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "block_b", Value: !friends.Block_By_B}}}}
-	res, err := friends_Repo.DB.Collection(entity.Friends).UpdateOne(context.TODO(), filter, update)
-	fmt.Println(res.ModifiedCount, "row affected")
-	if err != nil {
-		return false
-	}
-	return true
-
 }
